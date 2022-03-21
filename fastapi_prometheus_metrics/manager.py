@@ -24,8 +24,9 @@ class Singleton(type):
 
 
 class PrometheusManager(metaclass=Singleton):
-    def __init__(self, app_name: str) -> None:
+    def __init__(self, app_name: str, metric_name_prefix: str = "") -> None:
         self.app_name = app_name
+        self.metric_name_prefix = metric_name_prefix.removesuffix("_") + "_" if metric_name_prefix else ""
         self.metric_types = self._get_metric_types()
         signal(EventSignals.INBOUND_HTTP_REQ).connect(self.inbound_http_request)
         signal(EventSignals.RECORD_HTTP_REQ).connect(self.record_http_request)
@@ -81,8 +82,7 @@ class PrometheusManager(metaclass=Singleton):
             method=method,
         ).observe(latency)
 
-    @staticmethod
-    def _get_metric_types() -> dict:
+    def _get_metric_types(self) -> dict:
         """
         Define metric types here (see https://prometheus.io/docs/concepts/metric_types/),
         with the name, description and a list of the labels they expect.
@@ -91,14 +91,14 @@ class PrometheusManager(metaclass=Singleton):
         metric_types = {
             "counters": {
                 "inbound_http_request": Counter(
-                    name="inbound_http_request_total",
+                    name=f"{self.metric_name_prefix}inbound_http_request_total",
                     documentation="Incremental count of inbound HTTP requests",
                     labelnames=("app", "endpoint", "retailer", "response_code", "method"),
                 ),
             },
             "histograms": {
                 "request_latency": Histogram(
-                    name="request_latency_seconds",
+                    name=f"{self.metric_name_prefix}inbound_http_request_latency_seconds",
                     documentation="Request latency seconds",
                     labelnames=("app", "endpoint", "retailer", "response_code", "method"),
                 )
