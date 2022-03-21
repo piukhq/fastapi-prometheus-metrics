@@ -20,12 +20,12 @@ jobs:
       - run: pip install poetry
       - run: poetry config virtualenvs.create false
       - run: poetry install
-      - run: xenon --no-assert --max-average A --max-modules B --max-absolute B .
-      - run: mypy fastapi_prometheus_metrics
-      - run: pytest tests --verbose --cov=fastapi_prometheus_metrics --cov-report=xml --junitxml=report.xml
       - run: flake8 .
       - run: black --line-length=120 --check .
       - run: isort --check --line-length 120 --profile black .
+      - run: xenon --no-assert --max-average A --max-modules B --max-absolute B .
+      - run: mypy fastapi_prometheus_metrics
+      - run: pytest tests --verbose --cov=fastapi_prometheus_metrics --cov-report=xml --junitxml=report.xml
   create_tag_release:
     if: github.event_name == 'release' && github.event.action == 'published'
     name: create_tag_release
