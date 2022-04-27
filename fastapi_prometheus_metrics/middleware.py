@@ -1,10 +1,13 @@
 import os
 import time
 
+from typing import Callable
+
 from blinker import signal
 from fastapi import status
 from fastapi.requests import Request
 from fastapi.responses import Response, UJSONResponse
+from sentry_sdk import Hub, start_span
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.routing import Match
 
@@ -25,27 +28,37 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
 
         # Time our code
-        before_time = time.perf_counter()
-        response = await call_next(request)
-        after_time = time.perf_counter()
+        parent_span = Hub.current.scope.span
+        trace: Callable
+        if parent_span is None:
+            trace = start_span
+        else:
+            trace = parent_span.start_child
 
-        latency = after_time - before_time
-        method = request.method
-        endpoint, retailer = self._get_endpoint_and_retailer(request)
-        signal(EventSignals.RECORD_HTTP_REQ).send(
-            __name__,
-            endpoint=endpoint,
-            retailer=retailer,
-            latency=latency,
-            response_code=response.status_code,
-            method=method,
-        )
+        with trace(op="prometheus-middleware") as span:
+            before_time = time.perf_counter()
+            with span.start_child(op="endpoint-function"):
+                response = await call_next(request)
+            after_time = time.perf_counter()
 
-        signal(EventSignals.INBOUND_HTTP_REQ).send(
-            __name__, endpoint=endpoint, retailer=retailer, response_code=response.status_code, method=method
-        )
+            latency = after_time - before_time
+            method = request.method
+            endpoint, retailer = self._get_endpoint_and_retailer(request)
+            with span.start_child(op="prometheus-signals"):
+                signal(EventSignals.RECORD_HTTP_REQ).send(
+                    __name__,
+                    endpoint=endpoint,
+                    retailer=retailer,
+                    latency=latency,
+                    response_code=response.status_code,
+                    method=method,
+                )
 
-        return response
+                signal(EventSignals.INBOUND_HTTP_REQ).send(
+                    __name__, endpoint=endpoint, retailer=retailer, response_code=response.status_code, method=method
+                )
+
+            return response
 
     def _get_endpoint_and_retailer(self, request: Request) -> tuple[str, str]:
         url = request.url.path
