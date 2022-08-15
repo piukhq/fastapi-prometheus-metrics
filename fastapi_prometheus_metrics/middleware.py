@@ -44,19 +44,25 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
             latency = after_time - before_time
             method = request.method
             endpoint, retailer = self._get_endpoint_and_retailer(request)
-            with span.start_child(op="prometheus-signals"):
-                signal(EventSignals.RECORD_HTTP_REQ).send(
-                    __name__,
-                    endpoint=endpoint,
-                    retailer=retailer,
-                    latency=latency,
-                    response_code=response.status_code,
-                    method=method,
-                )
+            routes_to_ignore = ["/metrics", "/livez", "/healthz", "/readyz"]
+            if endpoint not in routes_to_ignore:
+                with span.start_child(op="prometheus-signals"):
+                    signal(EventSignals.RECORD_HTTP_REQ).send(
+                        __name__,
+                        endpoint=endpoint,
+                        retailer=retailer,
+                        latency=latency,
+                        response_code=response.status_code,
+                        method=method,
+                    )
 
-                signal(EventSignals.INBOUND_HTTP_REQ).send(
-                    __name__, endpoint=endpoint, retailer=retailer, response_code=response.status_code, method=method
-                )
+                    signal(EventSignals.INBOUND_HTTP_REQ).send(
+                        __name__,
+                        endpoint=endpoint,
+                        retailer=retailer,
+                        response_code=response.status_code,
+                        method=method,
+                    )
 
             return response
 
