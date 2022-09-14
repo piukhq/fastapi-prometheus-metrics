@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fastapi-prometheus-metrics"
-version = "0.2.2"
+version = "0.2.3"
 description = "utilities for reporting prometheus metrics for incoming http requests"
 authors = ["Bink <bink@bink.bink>"]
 packages = [
