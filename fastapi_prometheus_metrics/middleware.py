@@ -26,7 +26,6 @@ class MetricsSecurityMiddleware(BaseHTTPMiddleware):
 
 class PrometheusMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
-
         # Time our code
         parent_span = Hub.current.scope.span
         trace: Callable

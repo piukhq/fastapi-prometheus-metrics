@@ -9,7 +9,6 @@ router = APIRouter()
 
 @router.get(path="/metrics")
 def handle_metrics() -> Any:  # pragma: no cover
-
     registry = REGISTRY
     if getenv("PROMETHEUS_MULTIPROC_DIR"):
         registry = CollectorRegistry()
