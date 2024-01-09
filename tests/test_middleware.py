@@ -42,7 +42,7 @@ def test_prometheus_middleware(mock_signal: mock.MagicMock, app: FastAPI) -> Non
 @mock.patch("fastapi_prometheus_metrics.middleware.signal", autospec=True)
 def test_prometheus_middleware_does_not_send_metric_for_livez(mock_signal: mock.MagicMock, app: FastAPI) -> None:
     client = TestClient(app)
-    for path in ["/metrics", "/livez", "/healthz", "/readyz"]:
+    for path in ("/metrics", "/livez", "/healthz", "/readyz"):
         resp = client.get(path)
 
         assert resp.status_code == status.HTTP_200_OK

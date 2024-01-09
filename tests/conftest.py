@@ -1,5 +1,3 @@
-from typing import Any
-
 import pytest
 
 from fastapi import FastAPI
@@ -19,15 +17,15 @@ def app() -> FastAPI:
         return {"message": f"Hello {retailer_slug}"}
 
     @app.get(path="/livez")
-    async def livez() -> Any:
+    async def livez() -> dict:
         return {}
 
     @app.get(path="/healthz")
-    async def healthz() -> Any:
+    async def healthz() -> dict:
         return {}
 
     @app.get(path="/readyz")
-    async def readyz() -> Any:
+    async def readyz() -> dict:
         return {}
 
     return app

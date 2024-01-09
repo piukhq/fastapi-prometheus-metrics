@@ -1,5 +1,4 @@
 from os import getenv
-from typing import Any
 
 from fastapi import APIRouter, Response
 from prometheus_client import CONTENT_TYPE_LATEST, REGISTRY, CollectorRegistry, generate_latest, multiprocess
@@ -8,7 +7,7 @@ router = APIRouter()
 
 
 @router.get(path="/metrics")
-def handle_metrics() -> Any:  # pragma: no cover
+def handle_metrics() -> Response:  # pragma: no cover
     registry = REGISTRY
     if getenv("PROMETHEUS_MULTIPROC_DIR"):
         registry = CollectorRegistry()

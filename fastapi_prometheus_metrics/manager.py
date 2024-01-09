@@ -1,6 +1,6 @@
 import logging
 
-from typing import Union
+from typing import Any, ClassVar, Self
 
 from blinker import signal
 from prometheus_client import Counter, Histogram
@@ -13,13 +13,13 @@ logger = logging.getLogger(__name__)
 class Singleton(type):
     """Singleton metaclass"""
 
-    _instances: dict = {}
+    _instances: ClassVar[dict] = {}
 
-    def __call__(cls, *args, **kwargs):  # type:ignore
+    def __call__(cls, *args: Any, **kwargs: Any) -> Self:  # type: ignore  # noqa: ANN401
         if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)  # noqa: UP008
         else:
-            logger.warning(f"singleton already instantiated; using {str(cls._instances[cls])}")
+            logger.warning(f"singleton already instantiated; using {cls._instances[cls]!s}")
         return cls._instances[cls]
 
 
@@ -35,7 +35,7 @@ class PrometheusManager(metaclass=Singleton):
         return f"PrometheusManager(app_name={self.app_name})"
 
     def inbound_http_request(
-        self, sender: Union[object, str], endpoint: str, retailer: str, response_code: int, method: str
+        self, sender: object | str, endpoint: str, retailer: str, response_code: int, method: str
     ) -> None:
         """
         :param sender: Could be a class instance, or a string description of who the sender is
@@ -56,12 +56,12 @@ class PrometheusManager(metaclass=Singleton):
 
     def record_http_request(
         self,
-        sender: Union[object, str],
+        sender: object | str,
         endpoint: str,
         retailer: str,
         response_code: int,
         method: str,
-        latency: Union[int, float],
+        latency: int | float,
     ) -> None:
         """
         :param sender: Could be a class instance, or a string description of who the sender is

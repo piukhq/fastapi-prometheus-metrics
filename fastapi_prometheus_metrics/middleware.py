@@ -1,7 +1,7 @@
 import os
 import time
 
-from typing import Callable
+from collections.abc import Callable
 
 from blinker import signal
 from fastapi import status
@@ -14,10 +14,14 @@ from starlette.routing import Match
 from .enums import EventSignals
 
 
+def _metrics_debug() -> bool:
+    return os.getenv("METRICS_DEBUG", "False").lower() == "true"
+
+
 class MetricsSecurityMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         local_port = request.scope["server"][1]
-        if (request.url.path == "/metrics" and local_port != 9100 and not os.getenv("METRICS_DEBUG", False)) or (
+        if (request.url.path == "/metrics" and local_port != 9100 and not _metrics_debug()) or (
             request.url.path != "/metrics" and local_port == 9100
         ):
             return UJSONResponse({"detail": "Not found"}, status_code=status.HTTP_404_NOT_FOUND)
@@ -28,11 +32,7 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         # Time our code
         parent_span = Hub.current.scope.span
-        trace: Callable
-        if parent_span is None:
-            trace = start_span
-        else:
-            trace = parent_span.start_child
+        trace: Callable = start_span if parent_span is None else parent_span.start_child  # type: ignore [assignment]
 
         with trace(op="prometheus-middleware") as span:
             before_time = time.perf_counter()
