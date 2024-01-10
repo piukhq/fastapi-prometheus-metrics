@@ -1,6 +1,6 @@
 import logging
 
-from typing import Any, ClassVar, Self
+from typing import Any
 
 from blinker import signal
 from prometheus_client import Counter, Histogram
@@ -13,9 +13,9 @@ logger = logging.getLogger(__name__)
 class Singleton(type):
     """Singleton metaclass"""
 
-    _instances: ClassVar[dict] = {}
+    _instances: dict = {}  # noqa: RUF012
 
-    def __call__(cls, *args: Any, **kwargs: Any) -> Self:  # type: ignore  # noqa: ANN401
+    def __call__(cls, *args: Any, **kwargs: Any) -> Any:  # type: ignore  # noqa: ANN401
         if cls not in cls._instances:
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)  # noqa: UP008
         else:
