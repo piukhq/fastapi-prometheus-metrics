@@ -8,7 +8,7 @@ packages = [
 ]
 [tool.poetry.dependencies]
 python = "^3.10"
-blinker = "<1.6"
+blinker = "<1.8"
 fastapi = "^0.110.0"
 prometheus-client = "^0.20.0"
 sentry-sdk = "^1.39.1"
